@@ -1,20 +1,29 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { brand } from '@/config/brand'
+import { brand as defaultBrand } from '@/config/brand'
+
+interface BrandInfo {
+  tagline: string
+  taglineSuffix?: string
+  headline: string
+  description: string
+}
 
 interface HeroOverlayProps {
   onExplore: () => void
   onToggleAudio: () => void
   isVisible: boolean
   audioEnabled: boolean
+  brand?: BrandInfo
 }
 
 export function HeroOverlay({
   onExplore,
   onToggleAudio,
   isVisible,
-  audioEnabled
+  audioEnabled,
+  brand = defaultBrand
 }: HeroOverlayProps) {
   return (
     <AnimatePresence>

@@ -4,12 +4,14 @@ import { Canvas } from '@react-three/fiber'
 import { Environment, Preload } from '@react-three/drei'
 import { Suspense, useState, useCallback } from 'react'
 import { Terrain } from './Terrain'
+import { RealWorldTerrain } from './RealWorldTerrain'
 import { Vegetation } from './Vegetation'
 import { Clouds } from './Clouds'
 import { Birds } from './Birds'
 import { Markers } from './Markers'
 import { CameraControls } from './CameraControls'
 import { Location } from '@/config/locations'
+import { terrainSettings } from '@/config/terrain'
 
 interface TerrainSceneProps {
   onLocationSelect?: (location: Location) => void
@@ -28,6 +30,26 @@ export function TerrainScene({ onLocationSelect, isExploring }: TerrainSceneProp
     // Reset animation state after transition
     setTimeout(() => setIsAnimating(false), 2000)
   }, [onLocationSelect])
+
+  // Determine which terrain to render
+  const renderTerrain = () => {
+    if (terrainSettings.type === 'realworld' && terrainSettings.realworld) {
+      const { lat, lng, areaKm, resolution, verticalExaggeration } = terrainSettings.realworld
+      return (
+        <RealWorldTerrain
+          lat={lat}
+          lng={lng}
+          areaKm={areaKm}
+          resolution={resolution}
+          scale={200}
+          verticalExaggeration={verticalExaggeration}
+          apiProvider={terrainSettings.apiProvider}
+          useCache={terrainSettings.useCache}
+        />
+      )
+    }
+    return <Terrain />
+  }
 
   return (
     <div className="absolute inset-0">
@@ -68,8 +90,10 @@ export function TerrainScene({ onLocationSelect, isExploring }: TerrainSceneProp
           <Environment preset="forest" background={false} />
           <fog attach="fog" args={['#c9d9e8', 80, 300]} />
 
+          {/* Terrain - Procedural or Real-World */}
+          {renderTerrain()}
+
           {/* Scene Elements */}
-          <Terrain />
           <Vegetation />
           <Clouds />
           <Birds count={8} />

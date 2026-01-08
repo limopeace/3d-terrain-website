@@ -1,14 +1,15 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { brand } from '@/config/brand'
+import { brand as defaultBrand } from '@/config/brand'
 
 interface HeaderProps {
   onInquire: () => void
   isExploring: boolean
+  brandName?: string
 }
 
-export function Header({ onInquire, isExploring }: HeaderProps) {
+export function Header({ onInquire, isExploring, brandName = defaultBrand.name }: HeaderProps) {
   return (
     <motion.header
       initial={{ opacity: 0, y: -20 }}
@@ -39,7 +40,7 @@ export function Header({ onInquire, isExploring }: HeaderProps) {
             className="text-white font-serif text-xl tracking-wide hidden sm:block"
             style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
           >
-            {brand.name}
+            {brandName}
           </span>
         </motion.div>
 
@@ -62,7 +63,7 @@ export function Header({ onInquire, isExploring }: HeaderProps) {
             whileTap={{ scale: 0.95 }}
             className="px-6 py-2.5 rounded-full text-white text-sm font-medium tracking-wide transition-all"
             style={{
-              backgroundColor: brand.colors.primary,
+              backgroundColor: defaultBrand.colors.primary,
               boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
             }}
           >
