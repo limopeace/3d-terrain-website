@@ -1,65 +1,127 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
+import { Header } from '@/components/ui/Header'
+import { HeroOverlay } from '@/components/ui/HeroOverlay'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
+import { InquireModal } from '@/components/ui/InquireModal'
+import { CookieConsent } from '@/components/ui/CookieConsent'
+import { ExploreHints } from '@/components/ui/ExploreHints'
+import { Location } from '@/config/locations'
+
+// Dynamically import the 3D scene to avoid SSR issues
+const TerrainScene = dynamic(
+  () => import('@/components/scene/TerrainScene').then(mod => mod.TerrainScene),
+  {
+    ssr: false,
+    loading: () => null
+  }
+)
 
 export default function Home() {
+  // Loading state
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadProgress, setLoadProgress] = useState(0)
+
+  // UI states
+  const [isExploring, setIsExploring] = useState(false)
+  const [audioEnabled, setAudioEnabled] = useState(false)
+  const [inquireModalOpen, setInquireModalOpen] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
+
+  // Simulate loading progress
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          setTimeout(() => setIsLoading(false), 500)
+          return 100
+        }
+        return prev + Math.random() * 15
+      })
+    }, 200)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Handle explore button click
+  const handleExplore = useCallback(() => {
+    setIsExploring(true)
+  }, [])
+
+  // Handle audio toggle
+  const handleToggleAudio = useCallback(() => {
+    setAudioEnabled(prev => !prev)
+  }, [])
+
+  // Handle inquire modal
+  const handleOpenInquire = useCallback(() => {
+    setInquireModalOpen(true)
+  }, [])
+
+  const handleCloseInquire = useCallback(() => {
+    setInquireModalOpen(false)
+  }, [])
+
+  // Handle location selection from 3D scene
+  const handleLocationSelect = useCallback((location: Location) => {
+    setSelectedLocation(location)
+    console.log('Selected location:', location.name)
+  }, [])
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="relative w-full h-screen overflow-hidden">
+      {/* Loading Screen */}
+      <LoadingScreen
+        progress={Math.min(100, Math.floor(loadProgress))}
+        isLoading={isLoading}
+      />
+
+      {/* 3D Scene */}
+      <TerrainScene
+        onLocationSelect={handleLocationSelect}
+        isExploring={isExploring}
+      />
+
+      {/* Header */}
+      <Header
+        onInquire={handleOpenInquire}
+        isExploring={isExploring}
+      />
+
+      {/* Hero Overlay (visible before exploring) */}
+      <HeroOverlay
+        onExplore={handleExplore}
+        onToggleAudio={handleToggleAudio}
+        isVisible={!isLoading && !isExploring}
+        audioEnabled={audioEnabled}
+      />
+
+      {/* Explore Hints (visible when exploring starts) */}
+      <ExploreHints isVisible={isExploring} />
+
+      {/* Inquire Modal */}
+      <InquireModal
+        isOpen={inquireModalOpen}
+        onClose={handleCloseInquire}
+      />
+
+      {/* Cookie Consent */}
+      <CookieConsent />
+
+      {/* Selected location info (optional) */}
+      {selectedLocation && isExploring && (
+        <div className="absolute bottom-8 left-8 z-40 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg max-w-xs">
+          <h3 className="font-serif text-lg text-gray-900 mb-1">
+            {selectedLocation.name}
+          </h3>
+          <p className="text-gray-600 text-sm">
+            {selectedLocation.description}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+      )}
+    </main>
+  )
 }
